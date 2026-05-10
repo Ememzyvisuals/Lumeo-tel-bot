@@ -1,0 +1,883 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+<title>Lumeo AI</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&family=Syne:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet"/>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+:root{
+  --bg:#0c0f14; --s1:#141820; --s2:#1c2230; --edge:rgba(255,255,255,0.07);
+  --edge2:rgba(255,255,255,0.12); --gold:#c9a84c; --golddim:rgba(201,168,76,0.12);
+  --goldglow:rgba(201,168,76,0.28); --ice:#e8edf5; --icedim:rgba(232,237,245,0.55);
+  --icemute:rgba(232,237,245,0.28); --green:#4caf7d; --red:#e05252; --blue:#4c82c9;
+  --fn:'Nunito',sans-serif; --fd:'Syne',sans-serif; --fm:'JetBrains Mono',monospace;
+  --r:12px; --rsm:8px; --rlg:18px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:var(--fn);background:var(--bg);color:var(--ice);min-height:100vh;overflow-x:hidden;padding-bottom:68px}
+button,input,textarea{font-family:var(--fn)}
+/* ── Header ── */
+.hdr{position:sticky;top:0;z-index:100;display:flex;align-items:center;gap:12px;padding:12px 16px;background:rgba(12,15,20,0.94);backdrop-filter:blur(20px);border-bottom:1px solid var(--edge)}
+.hdr-logo{width:34px;height:34px;border-radius:8px;background:var(--golddim);border:1px solid var(--goldglow);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.hdr-logo svg{width:16px;height:16px;stroke:var(--gold);fill:none;stroke-width:1.8}
+.hdr-title{font-family:var(--fd);font-size:16px;font-weight:800;flex:1}
+.hdr-title span{color:var(--gold)}
+.hdr-cred{font-family:var(--fm);font-size:11px;color:var(--gold);background:var(--golddim);border:1px solid var(--goldglow);border-radius:20px;padding:3px 10px;white-space:nowrap}
+/* ── Tabs ── */
+.tabs{display:flex;border-bottom:1px solid var(--edge);background:var(--s1);overflow-x:auto;scrollbar-width:none;position:sticky;top:57px;z-index:99}
+.tabs::-webkit-scrollbar{display:none}
+.tab{flex:0 0 auto;padding:10px 16px;font-family:var(--fd);font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--icemute);border:none;background:none;cursor:pointer;border-bottom:2px solid transparent;transition:color .2s,border-color .2s;white-space:nowrap}
+.tab.on{color:var(--ice);border-bottom-color:var(--gold)}
+/* ── Pages ── */
+.pg{display:none;padding:16px}
+.pg.on{display:block;animation:fadeUp .22s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+/* ── Labels ── */
+.lbl{font-family:var(--fd);font-size:10px;font-weight:700;letter-spacing:1.8px;text-transform:uppercase;color:var(--icemute);margin:20px 0 10px}
+.lbl:first-child{margin-top:0}
+/* ── Cards ── */
+.card{background:var(--s1);border:1px solid var(--edge);border-radius:var(--r);padding:14px;margin-bottom:10px}
+.card-t{font-family:var(--fd);font-size:14px;font-weight:700;margin-bottom:4px}
+.card-s{font-size:12px;color:var(--icedim);line-height:1.6}
+/* ── Tiles grid ── */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.tile{background:var(--s1);border:1px solid var(--edge);border-radius:var(--r);padding:14px 10px 12px;display:flex;flex-direction:column;align-items:flex-start;gap:7px;cursor:pointer;transition:border-color .15s,background .15s;-webkit-tap-highlight-color:transparent}
+.tile:active{background:var(--s2);border-color:var(--edge2)}
+.tile-ic{width:30px;height:30px;border-radius:7px;background:var(--s2);border:1px solid var(--edge);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.tile-ic svg{width:15px;height:15px;stroke:var(--icedim);fill:none;stroke-width:1.6}
+.tile.gold .tile-ic{background:var(--golddim);border-color:var(--goldglow)}
+.tile.gold .tile-ic svg{stroke:var(--gold)}
+.tile-name{font-size:12px;font-weight:700;line-height:1.2}
+.tile-meta{font-size:10px;color:var(--icemute);font-family:var(--fm)}
+.tile.gold .tile-meta{color:var(--gold)}
+/* ── Buttons ── */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:11px 18px;border-radius:var(--rsm);font-family:var(--fd);font-size:12px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;cursor:pointer;border:none;transition:opacity .15s,transform .12s}
+.btn:active{transform:scale(.97);opacity:.85}
+.btn-p{background:var(--gold);color:#0c0f14}
+.btn-o{background:transparent;border:1px solid var(--edge2);color:var(--ice)}
+.btn-full{width:100%}
+.btn-sm{padding:8px 14px;font-size:11px}
+/* ── Inputs ── */
+input[type=text],input[type=number],textarea{width:100%;background:var(--s2);border:1px solid var(--edge);border-radius:var(--rsm);padding:10px 13px;color:var(--ice);font-size:13px;outline:none;transition:border-color .2s;resize:none;line-height:1.5}
+input:focus,textarea:focus{border-color:var(--goldglow)}
+input::placeholder,textarea::placeholder{color:var(--icemute)}
+/* ── Status messages ── */
+.status-bar{padding:8px 14px;border-radius:var(--rsm);font-size:12px;font-weight:600;margin-top:10px;display:none;text-align:center}
+.status-bar.ok{background:rgba(76,175,125,0.12);border:1px solid rgba(76,175,125,0.3);color:var(--green);display:block}
+.status-bar.err{background:rgba(224,82,82,0.1);border:1px solid rgba(224,82,82,0.3);color:var(--red);display:block}
+.status-bar.loading{background:var(--golddim);border:1px solid var(--goldglow);color:var(--gold);display:block}
+/* ── Chat ── */
+.chat-wrap{display:flex;flex-direction:column;height:calc(100vh - 200px);min-height:320px}
+.chat-msgs{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:10px;padding:4px 0 8px;scrollbar-width:thin;scrollbar-color:var(--edge) transparent}
+.chat-msgs::-webkit-scrollbar{width:3px}
+.chat-msgs::-webkit-scrollbar-thumb{background:var(--edge2);border-radius:3px}
+.msg{max-width:84%;display:flex;flex-direction:column;gap:2px}
+.msg.u{align-self:flex-end;align-items:flex-end}
+.msg.l{align-self:flex-start}
+.msg-bub{padding:9px 12px;border-radius:13px;font-size:13px;line-height:1.5}
+.msg.u .msg-bub{background:var(--golddim);border:1px solid var(--goldglow);border-bottom-right-radius:3px}
+.msg.l .msg-bub{background:var(--s1);border:1px solid var(--edge);border-bottom-left-radius:3px}
+.msg-time{font-size:10px;color:var(--icemute);font-family:var(--fm);padding:0 4px}
+.chat-bar{display:flex;gap:8px;align-items:flex-end;padding-top:10px;border-top:1px solid var(--edge);margin-top:8px}
+.chat-bar textarea{min-height:40px;max-height:100px}
+/* ── Typing indicator ── */
+.typing{display:none;align-self:flex-start}
+.typing.show{display:flex}
+.typing-bub{background:var(--s1);border:1px solid var(--edge);border-radius:13px;border-bottom-left-radius:3px;padding:10px 14px;display:flex;gap:4px;align-items:center}
+.dot{width:5px;height:5px;border-radius:50%;background:var(--icemute);animation:bounce .9s ease infinite}
+.dot:nth-child(2){animation-delay:.15s}
+.dot:nth-child(3){animation-delay:.3s}
+@keyframes bounce{0%,80%,100%{transform:scale(1);opacity:.4}40%{transform:scale(1.3);opacity:1}}
+/* ── Prompt chips ── */
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 12px}
+.chip{padding:4px 10px;border-radius:20px;background:var(--golddim);border:1px solid var(--goldglow);font-size:11px;color:var(--gold);cursor:pointer;font-weight:600;transition:background .15s}
+.chip:active{background:rgba(201,168,76,0.25)}
+/* ── Feature panels ── */
+.panel{display:none}
+.panel.on{display:block;animation:fadeUp .2s ease}
+.panel-back{display:flex;align-items:center;gap:8px;margin-bottom:16px}
+.panel-back-btn{font-family:var(--fm);font-size:11px;color:var(--icemute);cursor:pointer;display:flex;align-items:center;gap:4px;background:none;border:none;padding:0;transition:color .15s}
+.panel-back-btn:hover{color:var(--ice)}
+.panel-title{font-family:var(--fd);font-size:15px;font-weight:800}
+/* ── Packages ── */
+.pkg{display:flex;align-items:center;gap:12px;padding:14px;background:var(--s1);border:1px solid var(--edge);border-radius:var(--r);margin-bottom:8px;cursor:pointer;transition:border-color .15s}
+.pkg:active{border-color:var(--goldglow)}
+.pkg.best{border-color:var(--goldglow);background:var(--golddim)}
+.pkg-info{flex:1}
+.pkg-name{font-family:var(--fd);font-size:14px;font-weight:700}
+.pkg-credits{font-family:var(--fm);font-size:20px;font-weight:700;color:var(--gold)}
+.pkg-credits small{font-size:11px;font-family:var(--fn);font-weight:400;color:var(--icemute)}
+.pkg-stars{font-family:var(--fm);font-size:11px;color:var(--icemute)}
+.pkg-badge{font-size:9px;font-weight:700;background:var(--gold);color:#0c0f14;border-radius:4px;padding:2px 6px;text-transform:uppercase;margin-left:6px}
+/* ── Donate amounts ── */
+.donate-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.donate-amt{flex:1;min-width:60px;padding:10px;border-radius:var(--rsm);background:var(--s2);border:1px solid var(--edge);font-family:var(--fm);font-size:12px;font-weight:700;color:var(--icedim);cursor:pointer;text-align:center;transition:all .15s}
+.donate-amt:active{border-color:var(--goldglow);color:var(--gold)}
+/* ── Game board ── */
+.game-wrap{display:none}
+.game-wrap.on{display:block}
+.game-top{display:flex;align-items:center;gap:10px;margin-bottom:16px}
+.game-score-chip{margin-left:auto;font-family:var(--fm);font-size:12px;background:var(--s2);border:1px solid var(--edge);border-radius:6px;padding:4px 10px}
+/* TTT */
+.ttt-board{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;max-width:280px;margin:0 auto 14px}
+.ttt-cell{aspect-ratio:1;background:var(--s1);border:1px solid var(--edge);border-radius:var(--r);display:flex;align-items:center;justify-content:center;font-family:var(--fd);font-size:30px;font-weight:900;cursor:pointer;transition:background .15s,border-color .15s;user-select:none}
+.ttt-cell:hover:not(.taken){background:var(--s2)}
+.ttt-cell.x{color:var(--gold)}
+.ttt-cell.o{color:var(--ice)}
+.ttt-cell.win{background:var(--golddim);border-color:var(--goldglow)}
+.ttt-status{text-align:center;font-size:13px;font-weight:600;color:var(--icedim);min-height:20px;margin-bottom:12px}
+.ttt-scores{display:flex;gap:8px;margin-bottom:14px}
+.ttt-s{flex:1;background:var(--s1);border:1px solid var(--edge);border-radius:var(--rsm);padding:10px;text-align:center}
+.ttt-n{font-family:var(--fm);font-size:22px;font-weight:700;color:var(--gold)}
+.ttt-l{font-size:10px;color:var(--icemute)}
+/* Memory */
+.mem-board{display:grid;gap:7px;max-width:310px;margin:0 auto 14px}
+.mem-board.sz4{grid-template-columns:repeat(4,1fr)}
+.mem-board.sz6{grid-template-columns:repeat(6,1fr)}
+.mem-card{aspect-ratio:1;border-radius:var(--rsm);background:var(--s2);border:1px solid var(--edge);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:20px;user-select:none;transition:border-color .2s;position:relative}
+.mem-card .mf,.mem-card .mb{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;border-radius:inherit;transition:opacity .2s}
+.mem-card .mf{opacity:0}
+.mem-card.flipped .mf{opacity:1}
+.mem-card.flipped .mb{opacity:0}
+.mem-card.matched{border-color:var(--goldglow);background:var(--golddim);cursor:default}
+.mem-stats{display:flex;gap:8px;margin-bottom:12px}
+.mem-stat{flex:1;background:var(--s1);border:1px solid var(--edge);border-radius:var(--rsm);padding:8px;text-align:center}
+.mem-stat-n{font-family:var(--fm);font-size:18px;font-weight:700;color:var(--gold)}
+.mem-stat-l{font-size:10px;color:var(--icemute)}
+/* Snake */
+canvas#sc{border-radius:var(--r);border:1px solid var(--edge);display:block;margin:0 auto 12px;background:var(--s1)}
+.dpad-grid{display:grid;grid-template-columns:repeat(3,48px);gap:6px;justify-content:center}
+.dpad-btn{width:48px;height:48px;border-radius:var(--rsm);background:var(--s1);border:1px solid var(--edge);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;user-select:none;transition:background .1s}
+.dpad-btn:active{background:var(--s2)}
+.dpad-btn.center{background:var(--golddim);border-color:var(--goldglow);font-family:var(--fd);font-size:11px;font-weight:700;color:var(--gold)}
+/* Blitz */
+.blitz-q{font-family:var(--fd);font-size:40px;font-weight:900;text-align:center;color:var(--gold);margin:18px 0 22px;letter-spacing:-1px}
+.blitz-opts{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.blitz-opt{padding:18px;border-radius:var(--r);background:var(--s1);border:1px solid var(--edge);font-family:var(--fm);font-size:22px;font-weight:700;text-align:center;cursor:pointer;transition:all .12s}
+.blitz-opt:active{background:var(--s2)}
+.blitz-opt.ok{background:rgba(76,175,125,0.12);border-color:var(--green);color:var(--green)}
+.blitz-opt.ng{background:rgba(224,82,82,0.08);border-color:var(--red);color:var(--red)}
+.blitz-bar-wrap{height:3px;background:var(--edge);border-radius:2px;margin-bottom:12px;overflow:hidden}
+.blitz-bar{height:100%;background:var(--gold);transition:width .1s linear;border-radius:2px}
+/* Word */
+.wf-word{font-family:var(--fm);font-size:28px;font-weight:700;letter-spacing:10px;color:var(--gold);text-align:center;margin:14px 0 6px}
+.wf-hint{font-size:11px;color:var(--icemute);text-align:center;margin-bottom:14px}
+/* Reflex */
+.reflex-pad{height:180px;border-radius:var(--r);background:var(--s1);border:1px solid var(--edge);display:flex;align-items:center;justify-content:center;cursor:pointer;margin-bottom:12px;transition:background .08s;user-select:none}
+.reflex-msg{font-family:var(--fd);font-size:17px;font-weight:700;color:var(--icemute)}
+/* Profile stats */
+.stat-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}
+.stat-b{background:var(--s1);border:1px solid var(--edge);border-radius:var(--rsm);padding:12px 8px;text-align:center}
+.stat-n{font-family:var(--fm);font-size:19px;font-weight:700;color:var(--gold)}
+.stat-l{font-size:10px;color:var(--icemute);text-transform:uppercase;letter-spacing:.8px}
+/* Divider */
+.div{height:1px;background:var(--edge);margin:14px 0}
+/* Toast */
+.toast{position:fixed;bottom:76px;left:50%;transform:translateX(-50%) translateY(8px);background:var(--s2);border:1px solid var(--edge2);border-radius:var(--rsm);padding:8px 16px;font-size:12px;font-weight:600;opacity:0;transition:all .25s;z-index:999;white-space:nowrap;pointer-events:none;max-width:90vw;text-align:center}
+.toast.vis{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast.ok2{border-color:rgba(76,175,125,.35);color:var(--green)}
+.toast.er{border-color:rgba(224,82,82,.35);color:var(--red)}
+/* Bottom nav */
+.bnav{position:fixed;bottom:0;left:0;right:0;background:rgba(12,15,20,0.96);backdrop-filter:blur(20px);border-top:1px solid var(--edge);display:flex;z-index:200;padding-bottom:env(safe-area-inset-bottom,0)}
+.ni{flex:1;padding:9px 4px 7px;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;color:var(--icemute);transition:color .18s;border:none;background:none}
+.ni svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.6}
+.ni span{font-family:var(--fd);font-size:9px;font-weight:700;letter-spacing:.8px;text-transform:uppercase}
+.ni.on{color:var(--gold)}
+</style>
+</head>
+<body>
+
+<header class="hdr">
+  <div class="hdr-logo"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg></div>
+  <div class="hdr-title">Lumeo<span>.</span></div>
+  <div class="hdr-cred" id="hCred">— cr</div>
+</header>
+
+<nav class="tabs" id="navTabs"></nav>
+
+<!-- ════ HOME ════ -->
+<section class="pg" id="pg-home">
+  <div class="lbl">Quick Actions</div>
+  <div class="grid3">
+    <div class="tile gold" onclick="nav('chat')"><div class="tile-ic"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div><div class="tile-name">Ask Lumeo</div><div class="tile-meta">Free</div></div>
+    <div class="tile gold" onclick="nav('tools');openTool('image')"><div class="tile-ic"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg></div><div class="tile-name">Image Gen</div><div class="tile-meta">3 credits</div></div>
+    <div class="tile" onclick="nav('tools');openTool('download')"><div class="tile-ic"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg></div><div class="tile-name">Download</div><div class="tile-meta">Free</div></div>
+    <div class="tile" onclick="nav('tools');openTool('voice')"><div class="tile-ic"><svg viewBox="0 0 24 24"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v4M8 23h8"/></svg></div><div class="tile-name">Voice Note</div><div class="tile-meta">Free</div></div>
+    <div class="tile" onclick="nav('tools');openTool('pdf')"><div class="tile-ic"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div><div class="tile-name">Create PDF</div><div class="tile-meta">Free</div></div>
+    <div class="tile" onclick="nav('games')"><div class="tile-ic"><svg viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="4"/><path d="M7 12h4M9 10v4M17 11v2M15 12h4"/></svg></div><div class="tile-name">Games</div><div class="tile-meta">Free</div></div>
+  </div>
+  <div class="lbl" style="margin-top:16px">What's Free</div>
+  <div class="card">
+    <div style="display:flex;flex-direction:column;gap:0">
+      <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--edge);font-size:12px"><span>AI Chat with memory</span><span style="color:var(--green);font-family:var(--fm);font-size:11px">FREE</span></div>
+      <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--edge);font-size:12px"><span>Music & video downloads</span><span style="color:var(--green);font-family:var(--fm);font-size:11px">FREE</span></div>
+      <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--edge);font-size:12px"><span>Voice notes (TTS)</span><span style="color:var(--green);font-family:var(--fm);font-size:11px">FREE</span></div>
+      <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--edge);font-size:12px"><span>PDF & CV creator</span><span style="color:var(--green);font-family:var(--fm);font-size:11px">FREE</span></div>
+      <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--edge);font-size:12px"><span>AI music generation</span><span style="color:var(--green);font-family:var(--fm);font-size:11px">FREE</span></div>
+      <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--edge);font-size:12px"><span>Image generation</span><span style="color:var(--gold);font-family:var(--fm);font-size:11px">3 cr</span></div>
+      <div style="display:flex;justify-content:space-between;padding:8px 0;font-size:12px"><span>Video generation</span><span style="color:var(--gold);font-family:var(--fm);font-size:11px">8 cr</span></div>
+    </div>
+  </div>
+  <button class="btn btn-p btn-full" style="margin-top:4px" onclick="nav('store')">Support Lumeo — Send Stars</button>
+</section>
+
+<!-- ════ CHAT ════ -->
+<section class="pg" id="pg-chat">
+  <div class="chat-wrap">
+    <div class="chat-msgs" id="chatMsgs">
+      <div class="msg l"><div class="msg-bub">Hey! I'm Lumeo. Ask me anything, paste a download link, or type a command.</div><div class="msg-time">now</div></div>
+    </div>
+    <div class="typing" id="typingEl"><div class="typing-bub"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div></div>
+    <div class="chat-bar">
+      <textarea id="chatIn" placeholder="Message Lumeo..." rows="1" oninput="autoResize(this)" onkeydown="ckEnter(event)"></textarea>
+      <button class="btn btn-p btn-sm" onclick="sendChat()" style="flex-shrink:0;height:40px;padding:0 14px">Send</button>
+    </div>
+  </div>
+</section>
+
+<!-- ════ TOOLS ════ -->
+<section class="pg" id="pg-tools">
+  <div id="toolMenu">
+    <div class="lbl">Create & Download</div>
+    <div class="grid2">
+      <div class="tile gold" onclick="openTool('image')"><div class="tile-ic"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg></div><div class="tile-name">Generate Image</div><div class="tile-meta">3 credits per image</div></div>
+      <div class="tile" onclick="openTool('download')"><div class="tile-ic"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg></div><div class="tile-name">Download Media</div><div class="tile-meta">Music, video, any link</div></div>
+      <div class="tile" onclick="openTool('voice')"><div class="tile-ic"><svg viewBox="0 0 24 24"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v4"/></svg></div><div class="tile-name">Voice Note</div><div class="tile-meta">Text → speech, free</div></div>
+      <div class="tile" onclick="openTool('pdf')"><div class="tile-ic"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div><div class="tile-name">Create PDF</div><div class="tile-meta">Receipt, CV, letter</div></div>
+      <div class="tile" onclick="openTool('screenshot')"><div class="tile-ic"><svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg></div><div class="tile-name">Screenshot</div><div class="tile-meta">WhatsApp style</div></div>
+      <div class="tile" onclick="openTool('music')"><div class="tile-ic"><svg viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></div><div class="tile-name">Generate Music</div><div class="tile-meta">AI composition, free</div></div>
+    </div>
+  </div>
+  <div id="toolPanel" class="panel">
+    <div class="panel-back">
+      <button class="panel-back-btn" onclick="closeTool()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg> Back</button>
+      <div class="panel-title" id="toolTitle">Tool</div>
+    </div>
+    <div id="toolContent"></div>
+  </div>
+</section>
+
+<!-- ════ GAMES ════ -->
+<section class="pg" id="pg-games">
+  <div id="gameMenu">
+    <div class="lbl">Choose a Game</div>
+    <div class="grid2">
+      <div class="tile" onclick="startGame('ttt')"><div class="tile-ic"><svg viewBox="0 0 24 24" stroke-width="1.8"><path d="M3 8h18M3 16h18M8 3v18M16 3v18"/></svg></div><div class="tile-name">Tic-Tac-Toe</div><div class="tile-meta">vs AI · unbeatable</div></div>
+      <div class="tile" onclick="startGame('mem')"><div class="tile-ic"><svg viewBox="0 0 24 24" stroke-width="1.8"><rect x="2" y="2" width="9" height="9" rx="1"/><rect x="13" y="2" width="9" height="9" rx="1"/><rect x="2" y="13" width="9" height="9" rx="1"/><rect x="13" y="13" width="9" height="9" rx="1"/></svg></div><div class="tile-name">Memory Match</div><div class="tile-meta">Flip and find pairs</div></div>
+      <div class="tile" onclick="startGame('snake')"><div class="tile-ic"><svg viewBox="0 0 24 24" stroke-width="1.8"><path d="M3 12a9 9 0 1 1 9 9"/><path d="M12 8v4l3-3"/></svg></div><div class="tile-name">Snake</div><div class="tile-meta">Classic arcade</div></div>
+      <div class="tile" onclick="startGame('blitz')"><div class="tile-ic"><svg viewBox="0 0 24 24" stroke-width="1.8"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></div><div class="tile-name">Number Blitz</div><div class="tile-meta">Speed math</div></div>
+      <div class="tile" onclick="startGame('wf')"><div class="tile-ic"><svg viewBox="0 0 24 24" stroke-width="1.8"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg></div><div class="tile-name">Word Scramble</div><div class="tile-meta">Unscramble fast</div></div>
+      <div class="tile" onclick="startGame('reflex')"><div class="tile-ic"><svg viewBox="0 0 24 24" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div><div class="tile-name">Reflex Test</div><div class="tile-meta">Tap when it turns</div></div>
+    </div>
+  </div>
+  <div class="game-wrap" id="gTTT">
+    <div class="game-top"><button class="panel-back-btn" onclick="backGames()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg> Back</button><div class="panel-title">Tic-Tac-Toe</div><div class="game-score-chip" id="tttRd">Rd 1</div></div>
+    <div class="ttt-scores"><div class="ttt-s"><div class="ttt-n" id="tttYou">0</div><div class="ttt-l">You (X)</div></div><div class="ttt-s"><div class="ttt-n" id="tttDraw">0</div><div class="ttt-l">Draw</div></div><div class="ttt-s"><div class="ttt-n" id="tttAI">0</div><div class="ttt-l">Lumeo (O)</div></div></div>
+    <div class="ttt-status" id="tttStatus">Your turn</div>
+    <div class="ttt-board" id="tttBoard"></div>
+    <button class="btn btn-o btn-full btn-sm" onclick="resetTTT()">New Game</button>
+  </div>
+  <div class="game-wrap" id="gMem">
+    <div class="game-top"><button class="panel-back-btn" onclick="backGames()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg> Back</button><div class="panel-title">Memory Match</div><div class="game-score-chip" id="memLv">4×4</div></div>
+    <div class="mem-stats"><div class="mem-stat"><div class="mem-stat-n" id="memMv">0</div><div class="mem-stat-l">Moves</div></div><div class="mem-stat"><div class="mem-stat-n" id="memPr">0</div><div class="mem-stat-l">Pairs</div></div><div class="mem-stat"><div class="mem-stat-n" id="memTm">0s</div><div class="mem-stat-l">Time</div></div></div>
+    <div class="mem-board sz4" id="memBoard"></div>
+    <div class="grid2" style="gap:8px"><button class="btn btn-o btn-sm" onclick="initMem(4)">Easy 4×4</button><button class="btn btn-o btn-sm" onclick="initMem(6)">Hard 6×6</button></div>
+  </div>
+  <div class="game-wrap" id="gSnake">
+    <div class="game-top"><button class="panel-back-btn" onclick="backGames();stopSnake()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg> Back</button><div class="panel-title">Snake</div><div class="game-score-chip" id="snkSc">0</div></div>
+    <div style="text-align:center"><canvas id="sc" width="280" height="280"></canvas></div>
+    <div class="dpad-grid"><div></div><div class="dpad-btn" ontouchstart="sd(0,-1);return false" onclick="sd(0,-1)">▲</div><div></div><div class="dpad-btn" ontouchstart="sd(-1,0);return false" onclick="sd(-1,0)">◀</div><div class="dpad-btn center" id="snkBtn" onclick="toggleSnk()">START</div><div class="dpad-btn" ontouchstart="sd(1,0);return false" onclick="sd(1,0)">▶</div><div></div><div class="dpad-btn" ontouchstart="sd(0,1);return false" onclick="sd(0,1)">▼</div><div></div></div>
+  </div>
+  <div class="game-wrap" id="gBlitz">
+    <div class="game-top"><button class="panel-back-btn" onclick="backGames();clearInterval(btTimer)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg> Back</button><div class="panel-title">Number Blitz</div><div class="game-score-chip" id="btSc">0</div></div>
+    <div class="blitz-bar-wrap"><div class="blitz-bar" id="btBar" style="width:100%"></div></div>
+    <div class="blitz-q" id="btQ">Ready?</div>
+    <div class="blitz-opts" id="btOpts"></div>
+    <button class="btn btn-p btn-full" id="btStartBtn" onclick="startBlitz()" style="margin-top:14px">Start Game</button>
+  </div>
+  <div class="game-wrap" id="gWF">
+    <div class="game-top"><button class="panel-back-btn" onclick="backGames()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg> Back</button><div class="panel-title">Word Scramble</div><div class="game-score-chip" id="wfSc">0 pts</div></div>
+    <div class="card" style="text-align:center"><div class="wf-word" id="wfW">—</div><div class="wf-hint" id="wfH">—</div></div>
+    <div style="display:flex;gap:8px;margin-bottom:10px"><input id="wfIn" type="text" placeholder="Your answer" autocomplete="off" autocorrect="off" autocapitalize="off" onkeydown="if(event.key==='Enter')checkWF()"/><button class="btn btn-p btn-sm" onclick="checkWF()" style="flex-shrink:0">Go</button></div>
+    <div id="wfFb" style="text-align:center;font-size:13px;font-weight:600;min-height:20px;margin-bottom:8px"></div>
+    <button class="btn btn-o btn-full btn-sm" id="wfNext" onclick="nextWF()" style="display:none">Next Word</button>
+  </div>
+  <div class="game-wrap" id="gReflex">
+    <div class="game-top"><button class="panel-back-btn" onclick="backGames()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg> Back</button><div class="panel-title">Reflex Test</div><div class="game-score-chip" id="rfBest">Best: —</div></div>
+    <div class="reflex-pad" id="rfPad" onclick="rfTap()"><div class="reflex-msg" id="rfMsg">Tap to begin</div></div>
+    <div id="rfResults" style="display:flex;flex-direction:column;gap:6px"></div>
+  </div>
+</section>
+
+<!-- ════ STORE ════ -->
+<section class="pg" id="pg-store">
+  <div class="lbl">Support Lumeo</div>
+  <div class="card" style="border-color:rgba(201,168,76,0.2)">
+    <div class="card-t">Donate Stars ❤️</div>
+    <div class="card-s" style="margin-bottom:10px">Help keep Lumeo running. You get +1 bonus credit per 5 stars donated.</div>
+    <div class="donate-row">
+      <div class="donate-amt" onclick="donate(10)">10 ★</div>
+      <div class="donate-amt" onclick="donate(25)">25 ★</div>
+      <div class="donate-amt" onclick="donate(50)">50 ★</div>
+      <div class="donate-amt" onclick="donate(100)">100 ★</div>
+    </div>
+  </div>
+  <div class="div"></div>
+  <div class="lbl">Credit Packages</div>
+  <div style="font-size:12px;color:var(--icemute);margin-bottom:12px;line-height:1.6">Credits only used for image &amp; video generation. Everything else is free.</div>
+  <div class="pkg" onclick="buyPkg('starter')"><div class="pkg-info"><div class="pkg-name">Starter</div><div class="pkg-credits">30 <small>credits</small></div><div class="pkg-stars">25 Stars</div></div></div>
+  <div class="pkg best" onclick="buyPkg('popular')"><div class="pkg-info"><div class="pkg-name">Popular <span class="pkg-badge">Best</span></div><div class="pkg-credits">100 <small>credits</small></div><div class="pkg-stars">75 Stars</div></div></div>
+  <div class="pkg" onclick="buyPkg('pro')"><div class="pkg-info"><div class="pkg-name">Pro</div><div class="pkg-credits">220 <small>credits</small></div><div class="pkg-stars">150 Stars · +47 bonus</div></div></div>
+  <div class="pkg" onclick="buyPkg('ultimate')"><div class="pkg-info"><div class="pkg-name">Ultimate <span class="pkg-badge">Max</span></div><div class="pkg-credits">500 <small>credits</small></div><div class="pkg-stars">300 Stars · +200 bonus</div></div></div>
+  <div style="font-size:11px;color:var(--icemute);text-align:center;margin-top:12px;line-height:1.7">Stars are purchased in the Telegram app.<br>Credits never expire.</div>
+</section>
+
+<!-- ════ PROFILE ════ -->
+<section class="pg" id="pg-profile">
+  <div style="display:flex;align-items:center;gap:12px;padding:4px 0 16px">
+    <div style="width:50px;height:50px;border-radius:50%;background:var(--golddim);border:1px solid var(--goldglow);display:flex;align-items:center;justify-content:center;font-family:var(--fd);font-size:20px;font-weight:900;color:var(--gold);flex-shrink:0" id="profInit">?</div>
+    <div><div style="font-family:var(--fd);font-size:18px;font-weight:800" id="profName">Loading...</div><div style="font-size:12px;color:var(--icemute);font-family:var(--fm)" id="profUser">—</div></div>
+  </div>
+  <div class="stat-row">
+    <div class="stat-b"><div class="stat-n" id="stCr">—</div><div class="stat-l">Credits</div></div>
+    <div class="stat-b"><div class="stat-n" id="stId">—</div><div class="stat-l">Tg ID</div></div>
+    <div class="stat-b"><div class="stat-n">v3</div><div class="stat-l">Version</div></div>
+  </div>
+  <div class="lbl">Account</div>
+  <div class="card">
+    <div style="display:flex;flex-direction:column">
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--edge)"><span style="font-size:13px;color:var(--icedim)">Balance</span><span style="font-family:var(--fm);font-size:13px;color:var(--gold)" id="profCr">—</span></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--edge)"><span style="font-size:13px;color:var(--icedim)">Built by</span><span style="font-size:13px">EMEMZYVISUALS DIGITALS</span></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0"><span style="font-size:13px;color:var(--icedim)">Contact</span><span style="font-family:var(--fm);font-size:10px;color:var(--icemute)">ememzyvisualsdigitals@gmail.com</span></div>
+    </div>
+  </div>
+  <div class="lbl">Actions</div>
+  <div class="card" style="display:flex;flex-direction:column;gap:2px">
+    <button style="display:flex;align-items:center;gap:10px;background:none;border:none;color:var(--ice);font-family:var(--fn);font-size:13px;font-weight:700;cursor:pointer;padding:8px 0;border-bottom:1px solid var(--edge)" onclick="nav('store')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> Buy Credits</button>
+    <button style="display:flex;align-items:center;gap:10px;background:none;border:none;color:var(--ice);font-family:var(--fn);font-size:13px;font-weight:700;cursor:pointer;padding:8px 0" onclick="donate(25)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg> Support Lumeo</button>
+  </div>
+</section>
+
+<!-- Bottom nav -->
+<nav class="bnav" id="bnav"></nav>
+<div class="toast" id="toast"></div>
+
+<script>
+// ── Core setup ────────────────────────────────────────────────────────────────
+const tg     = window.Telegram?.WebApp;
+const tgUser = tg?.initDataUnsafe?.user || {};
+const API    = window.location.origin;
+
+if (tg) { tg.ready(); tg.expand(); tg.setBackgroundColor('#0c0f14'); tg.setHeaderColor('#0c0f14'); }
+
+// ── Navigation ────────────────────────────────────────────────────────────────
+const PAGES = ['home','chat','tools','games','store','profile'];
+const PAGE_ICONS = {
+  home: '<svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>',
+  chat: '<svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',
+  tools:'<svg viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>',
+  games:'<svg viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="4"/><path d="M7 12h4M9 10v4M17 11v2M15 12h4"/></svg>',
+  store:'<svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>',
+  profile:'<svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>'
+};
+
+// Build nav
+const tabsEl = document.getElementById('navTabs');
+const bnavEl = document.getElementById('bnav');
+PAGES.forEach(p => {
+  const tab = document.createElement('button');
+  tab.className = 'tab'; tab.textContent = p.charAt(0).toUpperCase() + p.slice(1);
+  tab.id = 'tab-' + p;
+  tab.onclick = () => nav(p);
+  tabsEl.appendChild(tab);
+
+  const ni = document.createElement('button');
+  ni.className = 'ni'; ni.id = 'ni-' + p;
+  ni.innerHTML = PAGE_ICONS[p] + '<span>' + p + '</span>';
+  ni.onclick = () => nav(p);
+  bnavEl.appendChild(ni);
+});
+
+function nav(name) {
+  document.querySelectorAll('.pg').forEach(el => el.classList.remove('on'));
+  document.querySelectorAll('.tab').forEach(el => el.classList.remove('on'));
+  document.querySelectorAll('.ni').forEach(el => el.classList.remove('on'));
+  const pg = document.getElementById('pg-' + name);
+  if (pg) pg.classList.add('on');
+  const tab = document.getElementById('tab-' + name);
+  if (tab) tab.classList.add('on');
+  const ni = document.getElementById('ni-' + name);
+  if (ni) ni.classList.add('on');
+  // Close tool panel when switching pages
+  if (name !== 'tools') closeTool();
+}
+nav('home'); // start on home
+
+// ── Toast ─────────────────────────────────────────────────────────────────────
+let _tt;
+function toast(msg, type) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast vis' + (type ? ' ' + type : '');
+  clearTimeout(_tt);
+  _tt = setTimeout(() => el.classList.remove('vis'), 2600);
+}
+
+// ── User data ─────────────────────────────────────────────────────────────────
+let _user = {};
+async function loadUser() {
+  const id = tgUser?.id;
+  if (!id) {
+    document.getElementById('profName').textContent = 'Demo Mode';
+    document.getElementById('profUser').textContent = 'Open in Telegram';
+    document.getElementById('hCred').textContent = '20 cr';
+    return;
+  }
+  try {
+    const r = await fetch(API + '/api/user/' + id);
+    _user = await r.json();
+    const cr = _user?.credits ?? 20;
+    const name = tgUser?.first_name || 'User';
+    document.getElementById('profName').textContent  = name + (tgUser?.last_name ? ' ' + tgUser.last_name : '');
+    document.getElementById('profUser').textContent  = tgUser?.username ? '@' + tgUser.username : '—';
+    document.getElementById('profInit').textContent  = name.charAt(0).toUpperCase();
+    document.getElementById('stId').textContent      = id;
+    document.getElementById('stCr').textContent      = cr;
+    document.getElementById('profCr').textContent    = cr + ' credits';
+    document.getElementById('hCred').textContent     = cr + ' cr';
+  } catch {}
+}
+loadUser();
+
+// ── API call helper ───────────────────────────────────────────────────────────
+async function apiAction(action, data, statusEl) {
+  const id = tgUser?.id;
+  if (!id) { toast('Open in Telegram to use this!', 'er'); return null; }
+  if (statusEl) { statusEl.className = 'status-bar loading'; statusEl.textContent = 'Sending to Lumeo...'; }
+  try {
+    const r = await fetch(API + '/api/action', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ tg_id: id, action, data }),
+    });
+    const res = await r.json();
+    if (res.ok) {
+      if (statusEl) { statusEl.className = 'status-bar ok'; statusEl.textContent = res.message || 'Done! Check Telegram.'; }
+      toast('Check your Telegram chat!', 'ok2');
+    } else {
+      if (statusEl) { statusEl.className = 'status-bar err'; statusEl.textContent = res.error || 'Failed.'; }
+      toast(res.error || 'Action failed', 'er');
+    }
+    return res;
+  } catch (e) {
+    const msg = 'Connection error';
+    if (statusEl) { statusEl.className = 'status-bar err'; statusEl.textContent = msg; }
+    toast(msg, 'er');
+    return null;
+  }
+}
+
+// ── Tools ─────────────────────────────────────────────────────────────────────
+const TOOLS = {
+  image: {
+    title: 'Generate Image',
+    render: () => `
+      <div class="lbl" style="margin-top:0">Describe your image</div>
+      <textarea id="imgP" rows="3" placeholder="e.g. Futuristic Lagos skyline at night, cinematic lighting"></textarea>
+      <div class="lbl">Quick prompts</div>
+      <div class="chips" id="imgChips"></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <span style="font-size:12px;color:var(--icemute)">Cost: <strong style="color:var(--gold)">3 credits</strong></span>
+        <span style="font-family:var(--fm);font-size:12px;color:var(--icemute)" id="imgBal">—</span>
+      </div>
+      <button class="btn btn-p btn-full" onclick="doImage()">Generate — sends to Telegram</button>
+      <div class="status-bar" id="imgStatus"></div>
+      <div style="margin-top:12px;font-size:11px;color:var(--icemute);line-height:1.6">Image will be sent directly to your Telegram chat. Make sure the bot is open.</div>`,
+    init: () => {
+      const prompts = ['Lagos skyline at night','African queen digital art','AI neural network abstract','Nigerian developer at work','Afrobeats concert energy','Futuristic African city'];
+      const chips = document.getElementById('imgChips');
+      if (chips) chips.innerHTML = prompts.map(p => `<div class="chip" onclick="document.getElementById('imgP').value='${p}'">${p}</div>`).join('');
+      const bal = document.getElementById('imgBal');
+      if (bal) bal.textContent = (_user?.credits ?? 0) + ' available';
+    }
+  },
+  download: {
+    title: 'Download Media',
+    render: () => `
+      <div class="lbl" style="margin-top:0">Song name or URL</div>
+      <input type="text" id="dlQ" placeholder="Rema Calm Down — or paste TikTok/YouTube link"/>
+      <div style="margin:10px 0 12px;font-size:12px;color:var(--icemute)">Supports: YouTube, TikTok, Instagram, Facebook, SoundCloud</div>
+      <button class="btn btn-p btn-full" onclick="doDownload()">Download — sends to Telegram</button>
+      <div class="status-bar" id="dlStatus"></div>`,
+    init: () => {}
+  },
+  voice: {
+    title: 'Voice Note',
+    render: () => `
+      <div class="lbl" style="margin-top:0">Text to speak</div>
+      <textarea id="voiceT" rows="4" placeholder="Type what Lumeo should say in a voice note..."></textarea>
+      <div style="margin:10px 0 12px;font-size:12px;color:var(--icemute)">Male voice · Groq Orpheus TTS · Unlimited length</div>
+      <button class="btn btn-p btn-full" onclick="doVoice()">Generate — sends to Telegram</button>
+      <div class="status-bar" id="voiceStatus"></div>`,
+    init: () => {}
+  },
+  pdf: {
+    title: 'Create PDF',
+    render: () => `
+      <div class="lbl" style="margin-top:0">Document type</div>
+      <div class="grid2" style="margin-bottom:12px">
+        ${['Receipt','Invoice','Formal Letter','Certificate','Exam Paper','CV / Resume'].map(t => `<button class="btn btn-o btn-sm" onclick="setPdfType('${t}')" style="font-size:11px">${t}</button>`).join('')}
+      </div>
+      <div class="lbl">Content / Description</div>
+      <textarea id="pdfC" rows="5" placeholder="Describe what should be in the document..."></textarea>
+      <button class="btn btn-p btn-full" style="margin-top:10px" onclick="doPDF()">Create PDF — sends to Telegram</button>
+      <div class="status-bar" id="pdfStatus"></div>`,
+    init: () => {}
+  },
+  screenshot: {
+    title: 'WhatsApp Screenshot',
+    render: () => `
+      <div class="lbl" style="margin-top:0">Conversation</div>
+      <textarea id="ssC" rows="6" placeholder="John: Hey what's up?\nMe: Nothing much!\nJohn: Want to hang out later?"></textarea>
+      <div class="lbl">Theme</div>
+      <div class="grid2" style="gap:8px;margin-bottom:12px">
+        <button id="ssBtnD" class="btn btn-p btn-sm" onclick="setSsT('dark')">Dark</button>
+        <button id="ssBtnL" class="btn btn-o btn-sm" onclick="setSsT('light')">Light</button>
+      </div>
+      <button class="btn btn-p btn-full" onclick="doSS()">Generate — sends to Telegram</button>
+      <div class="status-bar" id="ssStatus"></div>`,
+    init: () => {}
+  },
+  music: {
+    title: 'Generate Music',
+    render: () => `
+      <div class="lbl" style="margin-top:0">Describe the music</div>
+      <textarea id="musicP" rows="3" placeholder="e.g. Upbeat Afrobeats track with talking drums and guitar"></textarea>
+      <div class="lbl">Quick styles</div>
+      <div class="chips">
+        ${['Upbeat Afrobeats','Chill lo-fi beats','Dramatic orchestral','Electronic dance','Acoustic guitar','African drums'].map(s => `<div class="chip" onclick="document.getElementById('musicP').value='${s}'">${s}</div>`).join('')}
+      </div>
+      <button class="btn btn-p btn-full" onclick="doMusic()">Generate — sends to Telegram</button>
+      <div class="status-bar" id="musicStatus"></div>`,
+    init: () => {}
+  }
+};
+
+let _curTool = '', _ssTheme = 'dark', _pdfType = '';
+function openTool(id) {
+  const def = TOOLS[id]; if (!def) return;
+  _curTool = id;
+  document.getElementById('toolMenu').style.display = 'none';
+  const panel = document.getElementById('toolPanel');
+  panel.classList.add('on');
+  document.getElementById('toolTitle').textContent = def.title;
+  document.getElementById('toolContent').innerHTML = def.render();
+  def.init();
+  nav('tools');
+}
+function closeTool() {
+  _curTool = '';
+  document.getElementById('toolMenu').style.display = 'block';
+  const panel = document.getElementById('toolPanel');
+  panel.classList.remove('on');
+}
+function setSsT(t) {
+  _ssTheme = t;
+  document.getElementById('ssBtnD').className = t === 'dark' ? 'btn btn-p btn-sm' : 'btn btn-o btn-sm';
+  document.getElementById('ssBtnL').className = t === 'light' ? 'btn btn-p btn-sm' : 'btn btn-o btn-sm';
+}
+function setPdfType(t) { _pdfType = t; }
+
+async function doImage() {
+  const p = document.getElementById('imgP')?.value.trim();
+  if (!p) { toast('Enter a description first', 'er'); return; }
+  await apiAction('image', { prompt: p }, document.getElementById('imgStatus'));
+}
+async function doDownload() {
+  const q = document.getElementById('dlQ')?.value.trim();
+  if (!q) { toast('Enter a song name or URL', 'er'); return; }
+  await apiAction('download', { query: q }, document.getElementById('dlStatus'));
+}
+async function doVoice() {
+  const t = document.getElementById('voiceT')?.value.trim();
+  if (!t) { toast('Enter text first', 'er'); return; }
+  await apiAction('voice', { text: t }, document.getElementById('voiceStatus'));
+}
+async function doPDF() {
+  const c = document.getElementById('pdfC')?.value.trim();
+  if (!c) { toast('Add document content', 'er'); return; }
+  await apiAction('pdf', { content: c, docType: _pdfType }, document.getElementById('pdfStatus'));
+}
+async function doSS() {
+  const c = document.getElementById('ssC')?.value.trim();
+  if (!c) { toast('Enter a conversation', 'er'); return; }
+  await apiAction('screenshot', { convo: c, theme: _ssTheme }, document.getElementById('ssStatus'));
+}
+async function doMusic() {
+  const p = document.getElementById('musicP')?.value.trim();
+  if (!p) { toast('Describe the music first', 'er'); return; }
+  await apiAction('music', { prompt: p }, document.getElementById('musicStatus'));
+}
+
+// ── Store ─────────────────────────────────────────────────────────────────────
+function buyPkg(id) {
+  if (!tgUser?.id) { toast('Open in Telegram to purchase', 'er'); return; }
+  tg?.sendData(JSON.stringify({ action: 'buy_package', packageId: id }));
+  toast('Opening payment in Telegram...');
+}
+function donate(amt) {
+  if (!tgUser?.id) { toast('Open in Telegram to donate', 'er'); return; }
+  tg?.sendData(JSON.stringify({ action: 'donate', amount: amt }));
+  toast('Opening donation...');
+}
+
+// ── Chat ──────────────────────────────────────────────────────────────────────
+let _hist = [];
+function autoResize(el) { el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 120) + 'px'; }
+function ckEnter(e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChat(); } }
+
+function addMsg(text, role) {
+  const now = new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+  const d   = document.createElement('div');
+  d.className = 'msg ' + (role === 'user' ? 'u' : 'l');
+  d.innerHTML = '<div class="msg-bub">' + text.replace(/</g,'&lt;').replace(/\n/g,'<br>') + '</div><div class="msg-time">' + now + '</div>';
+  document.getElementById('chatMsgs').appendChild(d);
+  d.scrollIntoView({ behavior: 'smooth', block: 'end' });
+}
+function showTyping() { document.getElementById('typingEl').classList.add('show'); }
+function hideTyping() { document.getElementById('typingEl').classList.remove('show'); }
+
+async function sendChat() {
+  const inp  = document.getElementById('chatIn');
+  const text = inp.value.trim();
+  if (!text) return;
+  inp.value = ''; inp.style.height = '';
+  addMsg(text, 'user');
+
+  // Detect download links
+  if (/https?:\/\//i.test(text) && /tiktok|instagram|youtube|youtu\.be|facebook|soundcloud/i.test(text)) {
+    addMsg('Detected a media link — sending to Lumeo bot to download...', 'lumeo');
+    await apiAction('download', { query: text }, null);
+    return;
+  }
+
+  _hist.push({ role: 'user', content: text });
+  showTyping();
+
+  try {
+    const r = await fetch(API + '/api/chat', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ tg_id: tgUser?.id || 'demo', message: text, history: _hist.slice(-10) })
+    });
+    const d = await r.json();
+    hideTyping();
+    const reply = d.reply || "Couldn't generate a response. Try again!";
+    _hist.push({ role: 'assistant', content: reply });
+    addMsg(reply, 'lumeo');
+  } catch {
+    hideTyping();
+    addMsg('Connection error. Make sure you\'re online.', 'lumeo');
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// GAMES
+// ══════════════════════════════════════════════════════════════════════════════
+function backGames() {
+  document.querySelectorAll('.game-wrap').forEach(g => g.classList.remove('on'));
+  document.getElementById('gameMenu').style.display = 'block';
+  stopSnake(); clearInterval(btTimer); clearTimeout(rfTimer);
+}
+function startGame(id) {
+  document.getElementById('gameMenu').style.display = 'none';
+  document.querySelectorAll('.game-wrap').forEach(g => g.classList.remove('on'));
+  const el = document.getElementById('g' + id.toUpperCase().charAt(0) + id.slice(1));
+  if (el) el.classList.add('on');
+  if (id==='ttt')    initTTT();
+  if (id==='mem')    initMem(4);
+  if (id==='snake')  initSnake();
+  if (id==='wf')     initWF();
+  if (id==='reflex') initReflex();
+}
+
+// ── TTT ───────────────────────────────────────────────────────────────────────
+let tttB,tttActive,tttSc={X:0,O:0,D:0},tttRd=0;
+const tttW=[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+function initTTT(){
+  tttB=Array(9).fill('');tttActive=true;tttRd++;
+  document.getElementById('tttRd').textContent='Rd '+tttRd;
+  document.getElementById('tttStatus').textContent='Your turn (X)';
+  const b=document.getElementById('tttBoard');b.innerHTML='';
+  for(let i=0;i<9;i++){const c=document.createElement('div');c.className='ttt-cell';c.dataset.i=i;c.onclick=()=>tttMove(i);b.appendChild(c);}
+}
+function tttMove(i){
+  if(!tttActive||tttB[i])return;
+  tttB[i]='X';renderTTT();
+  const w=chkTTT('X');if(w){endTTT('You win! 🎉','X',w);return;}
+  if(tttB.every(c=>c)){endTTT('Draw!',null,[]);return;}
+  document.getElementById('tttStatus').textContent='Lumeo thinking...';
+  setTimeout(()=>{const m=bestTTT();tttB[m]='O';renderTTT();const w2=chkTTT('O');if(w2){endTTT('Lumeo wins!','O',w2);return;}if(tttB.every(c=>c)){endTTT('Draw!',null,[]);return;}document.getElementById('tttStatus').textContent='Your turn (X)';},500);
+}
+function renderTTT(){document.querySelectorAll('.ttt-cell').forEach((c,i)=>{c.textContent=tttB[i];c.className='ttt-cell '+(tttB[i]||'')+(tttB[i]?' taken':'');});}
+function chkTTT(p){return tttW.find(w=>w.every(i=>tttB[i]===p))||null;}
+function endTTT(msg,winner,wc){
+  tttActive=false;
+  if(wc?.length)wc.forEach(i=>document.querySelectorAll('.ttt-cell')[i].classList.add('win'));
+  if(winner==='X')tttSc.X++;else if(winner==='O')tttSc.O++;else tttSc.D++;
+  document.getElementById('tttStatus').textContent=msg;
+  document.getElementById('tttYou').textContent=tttSc.X;
+  document.getElementById('tttAI').textContent=tttSc.O;
+  document.getElementById('tttDraw').textContent=tttSc.D;
+}
+function resetTTT(){initTTT();}
+function mmx(b,d,isMax){
+  const w=chkTTT('O');if(w)return 10-d;
+  const l=chkTTT('X');if(l)return d-10;
+  if(b.every(c=>c))return 0;
+  const sc=[];b.forEach((c,i)=>{if(!c){b[i]=isMax?'O':'X';sc.push(mmx(b,d+1,!isMax));b[i]='';}});
+  return isMax?Math.max(...sc):Math.min(...sc);
+}
+function bestTTT(){let best=-Infinity,mv=0;tttB.forEach((c,i)=>{if(!c){tttB[i]='O';const s=mmx(tttB,0,false);tttB[i]='';if(s>best){best=s;mv=i;}}});return mv;}
+
+// ── Memory ────────────────────────────────────────────────────────────────────
+const MIS=['🔥','⚡','💎','🎯','🚀','🎵','🌟','🎭','🦋','🎪','🌈','🔮'];
+let mFlipped=[],mMatched=0,mMoves=0,mTimer=null,mSecs=0,mCards=[],mLock=false;
+function initMem(sz){
+  mMatched=0;mMoves=0;mSecs=0;mFlipped=[];mLock=false;clearInterval(mTimer);
+  document.getElementById('memMv').textContent='0';
+  document.getElementById('memPr').textContent='0';
+  document.getElementById('memTm').textContent='0s';
+  document.getElementById('memLv').textContent=sz+'×'+sz;
+  const tot=sz*sz,pairs=tot/2;
+  const icons=MIS.slice(0,pairs);
+  const arr=[];icons.forEach(ic=>{arr.push({id:ic,ic});arr.push({id:ic,ic});});
+  shuf(arr);mCards=arr;
+  const bd=document.getElementById('memBoard');
+  bd.className='mem-board sz'+sz;bd.innerHTML='';
+  arr.forEach((c,idx)=>{
+    const el=document.createElement('div');el.className='mem-card';
+    el.innerHTML='<div class="mf" style="font-size:'+(sz===4?'22':'16')+'px">'+c.ic+'</div><div class="mb" style="background:var(--s2)"></div>';
+    el.onclick=()=>flipMem(el,idx);bd.appendChild(el);
+  });
+  mTimer=setInterval(()=>{mSecs++;document.getElementById('memTm').textContent=mSecs+'s';},1000);
+}
+function flipMem(el,idx){
+  if(mLock||el.classList.contains('flipped')||el.classList.contains('matched'))return;
+  el.classList.add('flipped');mFlipped.push({el,idx});
+  if(mFlipped.length<2)return;
+  mMoves++;document.getElementById('memMv').textContent=mMoves;
+  const[a,b]=mFlipped;
+  if(mCards[a.idx].id===mCards[b.idx].id){
+    a.el.classList.add('matched');b.el.classList.add('matched');mMatched++;
+    document.getElementById('memPr').textContent=mMatched;mFlipped=[];
+    if(mMatched===(document.querySelectorAll('.mem-card').length/2)){clearInterval(mTimer);toast('Complete! '+mMoves+' moves, '+mSecs+'s ','ok2');}
+  }else{
+    mLock=true;setTimeout(()=>{a.el.classList.remove('flipped');b.el.classList.remove('flipped');mFlipped=[];mLock=false;},850);
+  }
+}
+function shuf(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+
+// ── Snake ─────────────────────────────────────────────────────────────────────
+let sCtx,sInt,sSeg,sDir,sFood,sAlive=false,sScN=0;
+const CELL=16,COLS=17,ROWS=17;
+function initSnake(){
+  const cv=document.getElementById('sc');cv.width=COLS*CELL;cv.height=ROWS*CELL;
+  sCtx=cv.getContext('2d');drawSnakeIdle();
+}
+function drawSnakeIdle(){if(!sCtx)return;sCtx.fillStyle='#141820';sCtx.fillRect(0,0,COLS*CELL,ROWS*CELL);sCtx.fillStyle='rgba(201,168,76,0.35)';sCtx.font='bold 14px Syne,sans-serif';sCtx.textAlign='center';sCtx.fillText('Press START',COLS*CELL/2,ROWS*CELL/2);}
+function toggleSnk(){
+  if(sAlive){stopSnake();return;}
+  sSeg=[{x:8,y:8},{x:7,y:8},{x:6,y:8}];sDir={x:1,y:0};sAlive=true;sScN=0;
+  document.getElementById('snkSc').textContent='0';
+  document.getElementById('snkBtn').textContent='STOP';
+  placeFood();sInt=setInterval(tickSnake,135);
+}
+function stopSnake(){clearInterval(sInt);sAlive=false;drawSnakeIdle();document.getElementById('snkBtn').textContent='START';}
+function sd(dx,dy){if((dx!==0&&sDir.x===0)||(dy!==0&&sDir.y===0))sDir={x:dx,y:dy};}
+function placeFood(){let p;do{p={x:Math.floor(Math.random()*COLS),y:Math.floor(Math.random()*ROWS)};}while(sSeg.some(s=>s.x===p.x&&s.y===p.y));sFood=p;}
+function tickSnake(){
+  const h={x:sSeg[0].x+sDir.x,y:sSeg[0].y+sDir.y};
+  if(h.x<0||h.x>=COLS||h.y<0||h.y>=ROWS||sSeg.some(s=>s.x===h.x&&s.y===h.y)){toast('Game over! Score: '+sScN,'er');stopSnake();return;}
+  sSeg.unshift(h);
+  if(h.x===sFood.x&&h.y===sFood.y){sScN++;document.getElementById('snkSc').textContent=sScN;placeFood();}else sSeg.pop();
+  const ctx=sCtx;ctx.fillStyle='#141820';ctx.fillRect(0,0,COLS*CELL,ROWS*CELL);
+  sSeg.forEach((s,i)=>{ctx.fillStyle=i===0?'#c9a84c':'rgba(201,168,76,0.55)';ctx.beginPath();if(ctx.roundRect)ctx.roundRect(s.x*CELL+1,s.y*CELL+1,CELL-2,CELL-2,3);else ctx.rect(s.x*CELL+1,s.y*CELL+1,CELL-2,CELL-2);ctx.fill();});
+  ctx.fillStyle='#e05252';ctx.beginPath();ctx.arc(sFood.x*CELL+CELL/2,sFood.y*CELL+CELL/2,CELL/2-1,0,Math.PI*2);ctx.fill();
+}
+document.addEventListener('keydown',e=>{const k={ArrowUp:[0,-1],ArrowDown:[0,1],ArrowLeft:[-1,0],ArrowRight:[1,0]};const d=k[e.key];if(d){e.preventDefault();sd(...d);}});
+
+// ── Blitz ─────────────────────────────────────────────────────────────────────
+let btSc=0,btTimer,btLeft=30,btAns=0;
+function startBlitz(){
+  btSc=0;btLeft=30;document.getElementById('btStartBtn').style.display='none';
+  document.getElementById('btSc').textContent='0';nextBlitz();
+  clearInterval(btTimer);
+  btTimer=setInterval(()=>{
+    btLeft--;const pct=(btLeft/30)*100;
+    document.getElementById('btBar').style.width=pct+'%';
+    document.getElementById('btBar').style.background=btLeft<10?'var(--red)':'var(--gold)';
+    if(btLeft<=0){clearInterval(btTimer);document.getElementById('btQ').textContent='Time up!';document.getElementById('btOpts').innerHTML='';document.getElementById('btStartBtn').style.display='block';document.getElementById('btStartBtn').textContent='Play Again';}
+  },1000);
+}
+function nextBlitz(){
+  const ops=['+','-','×'],op=ops[Math.floor(Math.random()*ops.length)];
+  const a=Math.floor(Math.random()*(op==='×'?12:20))+1,b=Math.floor(Math.random()*(op==='×'?12:20))+1;
+  btAns=op==='+'?a+b:op==='-'?Math.abs(a-b):a*b;
+  const qa=op==='-'?Math.max(a,b):a,qb=op==='-'?Math.min(a,b):b;
+  document.getElementById('btQ').textContent=qa+' '+op+' '+qb;
+  const opts=[btAns];while(opts.length<4){const f=btAns+Math.floor(Math.random()*10)-5;if(!opts.includes(f)&&f>=0)opts.push(f);}
+  shuf(opts);document.getElementById('btOpts').innerHTML=opts.map(o=>`<div class="blitz-opt" onclick="pickBlitz(this,${o})">${o}</div>`).join('');
+}
+function pickBlitz(el,v){
+  document.querySelectorAll('.blitz-opt').forEach(o=>o.style.pointerEvents='none');
+  if(v===btAns){el.classList.add('ok');btSc++;document.getElementById('btSc').textContent=btSc;setTimeout(nextBlitz,350);}
+  else{el.classList.add('ng');document.querySelector('.blitz-opt:nth-child('+(([...document.querySelectorAll('.blitz-opt')].findIndex(o=>parseInt(o.textContent)===btAns)+1))+')')?.classList.add('ok');setTimeout(nextBlitz,650);}
+}
+
+// ── Word Find ─────────────────────────────────────────────────────────────────
+const WDS=[{w:'TELEGRAM',h:'Messaging app'},{w:'NIGERIA',h:'Giant of Africa'},{w:'ALGORITHM',h:'Step-by-step logic'},{w:'DEVELOPER',h:'Builds software'},{w:'ARTIFICIAL',h:'Not natural'},{w:'INTELLIGENCE',h:'Cognitive ability'},{w:'DATABASE',h:'Stores data'},{w:'SUPABASE',h:'Firebase alternative'},{w:'JAVASCRIPT',h:'Web language'},{w:'DOWNLOAD',h:'Getting a file'},{w:'GENERATE',h:'To create'},{w:'CREDITS',h:'Lumeo currency'}];
+let wfSc=0,wfIdx=0,wfCur='';
+function scram(w){const a=w.split('');for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a.join('')===w?scram(w):a.join('');}
+function initWF(){wfSc=0;wfIdx=0;document.getElementById('wfSc').textContent='0 pts';nextWF();}
+function nextWF(){
+  const item=WDS[wfIdx%WDS.length];wfCur=item.w;wfIdx++;
+  document.getElementById('wfW').textContent=scram(wfCur);
+  document.getElementById('wfH').textContent='Hint: '+item.h;
+  document.getElementById('wfIn').value='';
+  document.getElementById('wfFb').textContent='';
+  document.getElementById('wfFb').style.color='';
+  document.getElementById('wfNext').style.display='none';
+  document.getElementById('wfIn').focus();
+}
+function checkWF(){
+  const ans=document.getElementById('wfIn').value.trim().toUpperCase();
+  const fb=document.getElementById('wfFb');
+  if(ans===wfCur){wfSc++;document.getElementById('wfSc').textContent=wfSc+' pts';fb.textContent='Correct!';fb.style.color='var(--green)';document.getElementById('wfNext').style.display='block';}
+  else{fb.textContent='Try again ('+wfCur.length+' letters)';fb.style.color='var(--red)';}
+}
+
+// ── Reflex ────────────────────────────────────────────────────────────────────
+let rfState='idle',rfTimer,rfStart=0,rfResults=[],rfBest=Infinity;
+function initReflex(){rfState='idle';}
+function rfTap(){
+  const pad=document.getElementById('rfPad'),msg=document.getElementById('rfMsg');
+  if(rfState==='idle'){rfState='wait';pad.style.background='var(--red)';msg.textContent='Wait for gold...';msg.style.color='var(--ice)';clearTimeout(rfTimer);rfTimer=setTimeout(()=>{rfState='go';rfStart=Date.now();pad.style.background='var(--gold)';msg.textContent='TAP!';msg.style.color='var(--bg)';},2000+Math.random()*3000);}
+  else if(rfState==='wait'){clearTimeout(rfTimer);rfState='idle';pad.style.background='var(--s1)';msg.textContent='Too early! Try again.';msg.style.color='var(--red)';}
+  else if(rfState==='go'){
+    const ms=Date.now()-rfStart;rfState='idle';pad.style.background='var(--s1)';msg.textContent='Tap to try again';msg.style.color='var(--icemute)';
+    rfResults.unshift(ms);if(rfResults.length>5)rfResults.pop();
+    if(ms<rfBest){rfBest=ms;document.getElementById('rfBest').textContent='Best: '+ms+'ms';}
+    const el=document.getElementById('rfResults');
+    el.innerHTML=rfResults.map((r,i)=>`<div class="card" style="padding:8px 12px;display:flex;justify-content:space-between;margin-bottom:6px;border-radius:var(--rsm)"><span style="font-size:12px;color:var(--icedim)">Attempt ${rfResults.length-i}</span><span style="font-family:var(--fm);font-size:13px;color:${r<250?'var(--green)':r<400?'var(--gold)':'var(--red)'}">${r}ms</span></div>`).join('');
+  }
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+loadUser();
+</script>
+</body>
+</html>
